@@ -20,7 +20,12 @@ $VCFDomainManagerProperties = @{
 }
 
 $VCFInstallerSoftwareDepot = "offline"
-$VCFInstallerDepotHttps = $false
+$VCFInstallerDepotHttps = $true
+
+$VCFInstallerImportDepotCert = $false
+$VCFInstallerDepotFQDN = "vcfdepot01.vcf.lab"
+$VCFInstallerKeystore = "/usr/lib/jvm/openjdk-java17-headless.x86_64/lib/security/cacerts"
+$VCFInstallerKeystorePass = "changeit"
 
 #### DO NOT EDIT BEYOND HERE ####
 
@@ -88,6 +93,11 @@ if($VCFInstallerSoftwareDepot -eq "offline") {
 
     if($VCFInstallerDepotHttps -eq $false) {
         $script += "sed -i -e `"/lcm.depot.adapter.port=.*/a lcm.depot.adapter.httpsEnabled=false`" ${vcfLcmConfigFile}`n"
+    } elseif ($VCFInstallerImportDepotCert) {
+        $script += "sed -i -e `"/lcm.depot.adapter.certificateCheckEnabled=true/lcm.depot.adapter.certificateCheckEnabled=false/g`" ${vcfLcmConfigFile}`n"
+        $script += "openssl s_client -showcerts -connect `"${VCFInstallerDepotFQDN}:443`" -servername `"${VCFInstallerDepotFQDN}`" </dev/null 2>/dev/null | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > /root/fullchain.pem`n"
+        $script += "keytool -delete -keystore `"${VCFInstallerKeystore}`" -storepass `"${VCFInstallerKeystorePass}`" -alias `"${VCFInstallerDepotFQDN}`" >/dev/null 2>&1 || true`n"
+        $script += "keytool -importcert -trustcacerts -keystore `"${VCFInstallerKeystore}`" -storepass `"${VCFInstallerKeystorePass}`" -noprompt -alias `"${VCFInstallerDepotFQDN}`" -file /root/fullchain.pem`n"
     }
 }
 
