@@ -20,7 +20,7 @@ $VCFDomainManagerProperties = @{
 }
 
 $VCFInstallerSoftwareDepot = "offline"
-$VCFInstallerDepotHttps = $true
+$VCFInstallerDepotHttps = $false
 
 $VCFInstallerImportDepotCert = $false
 $VCFInstallerDepotFQDN = "vcfdepot01.vcf.lab"
@@ -93,7 +93,7 @@ if($VCFInstallerSoftwareDepot -eq "offline") {
 
     if($VCFInstallerDepotHttps -eq $false) {
         $script += "sed -i -e `"/lcm.depot.adapter.port=.*/a lcm.depot.adapter.httpsEnabled=false`" ${vcfLcmConfigFile}`n"
-    } elseif ($VCFInstallerImportDepotCert) {
+    } elseif($VCFInstallerImportDepotCert) {
         $script += "sed -i -e `"/lcm.depot.adapter.certificateCheckEnabled=true/lcm.depot.adapter.certificateCheckEnabled=false/g`" ${vcfLcmConfigFile}`n"
         $script += "openssl s_client -showcerts -connect `"${VCFInstallerDepotFQDN}:443`" -servername `"${VCFInstallerDepotFQDN}`" </dev/null 2>/dev/null | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > /root/fullchain.pem`n"
         $script += "keytool -delete -keystore `"${VCFInstallerKeystore}`" -storepass `"${VCFInstallerKeystorePass}`" -alias `"${VCFInstallerDepotFQDN}`" >/dev/null 2>&1 || true`n"
